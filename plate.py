@@ -9,8 +9,11 @@ def get_probable_rect(img, contours, max_area = 0.25, min_area = 0.05):
     curr_probable = []
     deviation = []
     for contour in contours:
-        c_height = (np.abs(contour[0, 0, 1]-contour[1, 0, 1]) + np.abs(contour[2, 0, 1]-contour[3, 0, 1])) / 2
-        c_width = (np.abs(contour[0, 0, 0]-contour[2, 0, 0]) + np.abs(contour[1, 0, 0]-contour[3, 0, 0])) / 2
+        _, _, c_height, c_width = cv2.boundingRect(contour)
+        if (not 3 < c_height / c_width < 6) and (not 3 < c_width / c_height < 6): # ratio of object 
+            continue
+        # c_height = (np.abs(contour[0, 0, 1]-contour[1, 0, 1]) + np.abs(contour[2, 0, 1]-contour[3, 0, 1])) / 2
+        # c_width = (np.abs(contour[0, 0, 0]-contour[2, 0, 0]) + np.abs(contour[1, 0, 0]-contour[3, 0, 0])) / 2
         if (min_area * area) < c_height * c_width < (max_area * area):
             curr_probable.append(contour)
             y_deviation = (np.abs(contour[0, 0, 1]-contour[2, 0, 1]) + np.abs(contour[1, 0, 1]-contour[3, 0, 1])) / 2
@@ -32,7 +35,7 @@ def main():
         edges = cv2.Canny(curr_img, 30, 200) # edge recognition
         cv2.imshow(f"edges{filename}", edges)
         cv2.waitKey(0)
-        edges = cv2.dilate(edges, None, iterations=2) # close up some slightly open curves
+        edges = cv2.dilate(edges, None, iterations=1) # close up some slightly open curves
         cv2.imshow(f"dilated{filename}", edges)
         cv2.waitKey(0)
         edges = cv2.erode(edges, None, iterations=1) # thin out edges
