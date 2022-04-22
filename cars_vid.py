@@ -68,9 +68,13 @@ def generate(f1, f2, height, width):
     probable_car = []
     contours, hierarchy = cv2.findContours(windowed, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     for contour, level in zip(contours, hierarchy[0]):
-        if cv2.contourArea(contour) > 1000:  # size check
+        if 800 < cv2.contourArea(contour) < 4000:  # size check
             if level[3] == -1:  # only add if it is outermost contour
                 probable_car.append(contour)
+        elif cv2.contourArea(contour) >= 4000: # if box is too large, put smaller box, possible fix for "merges"
+            if level[2] > -1:
+                if cv2.contourArea(contours[level[2]]) > 800:
+                    probable_car.append(contours[level[2]])
 
     # draw bounding boxes
     out_frame = f1.copy()
@@ -80,10 +84,12 @@ def generate(f1, f2, height, width):
         cv2.rectangle(out_frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
     cv2.line(out_frame, (0, int(0.5*height)), (width, int(0.5*height)), (0, 111, 255), 1)
     cv2.line(out_frame, (0, int(0.9*height)), (width, int(0.9*height)), (0, 111, 255), 1)
+    cv2.putText(out_frame, f"Number of cars in zone: {len(probable_car)}", (20, 50),
+                cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 0, 255), 1, 2)
     return out_frame
 
 def main():
-    capture = cv2.VideoCapture('traffic_vids/vid1.mp4')
+    capture = cv2.VideoCapture('traffic_vids/vid0.mp4')
 
     # extract frames
     frames = []
@@ -100,7 +106,7 @@ def main():
         out_frames.append(generate(frames[i], frames[i+1], h, w))
         print(i)
 
-    output_vid = cv2.VideoWriter('traffic_vids/vid1_out.mp4', cv2.VideoWriter_fourcc('M', 'P', '4', 'V'), 25, (w, h))
+    output_vid = cv2.VideoWriter('traffic_vids/vid0_out.mp4', cv2.VideoWriter_fourcc('M', 'P', '4', 'V'), 25, (w, h))
     for frame in out_frames:
         output_vid.write(frame)
     output_vid.release()
