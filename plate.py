@@ -44,17 +44,17 @@ def main():
         contours = cv2.findContours(edges.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         contours = imutils.grab_contours(contours)
         contours = sorted(contours, key=cv2.contourArea, reverse=True)[:10]
-        screenCnt = []
+        reduced_contours = []
 
         for contour in contours:
             # reduce number of corners
             reduction = cv2.approxPolyDP(contour, 0.018 * cv2.arcLength(contour, True), True)
             if len(reduction) == 4:
-                screenCnt.append(reduction)
+                reduced_contours.append(reduction)
 
         if contour is not None:
             # sort contours that "seem" like rectangles, heuristics
-            prob_cnt = get_probable_rect(curr_img, screenCnt, max_area=0.9, min_area=0.001)
+            prob_cnt = get_probable_rect(curr_img, reduced_contours, max_area=0.9, min_area=0.001)
             if len(prob_cnt) != 0:
                 print(len(prob_cnt))
                 orig_img = cv2.imread(file, cv2.IMREAD_COLOR)
